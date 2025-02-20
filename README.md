@@ -37,7 +37,12 @@ func main() {
     }
 
     // Create a throttled net.Listener with a global bandwidth limit of 1MB/s and perConn bandwith to 500kB/s
-    throttledLn := netlistener.NewThrottledListener(ln, 1024*1024, 512*1024)
+    throttledLn := netlistener.NewThrottledListener(ln, 1024*1024, 512*1024/2)
+
+    go func() {
+        time.Sleep(10 * time.Second)
+        throttledLn.SetLimits(limit, limit) // Update limits dynamically
+    }()
 
     // Start accepting connections
     for {
@@ -50,12 +55,6 @@ func main() {
         // Handle the connection
         go handleConnection(conn)
     }
-
-    // Wait for a while
-    time.Sleep(10 * time.Second)
-
-    // Change the global bandwidth limit to 2MB/s and local bandwidth limit to 1MB/s
-    throttledLn.SetLimits(2 * 1024 * 1024, 1024 * 1024)
 
 }
 
